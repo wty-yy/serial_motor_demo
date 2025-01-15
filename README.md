@@ -38,7 +38,10 @@ Has two modes, one for raw PWM input (-255 to 255) and one for closed-loop contr
 
 ## Launch file usage
 
-Update `./serial_motor_demo/launch/driver_with_gui.launch.py`
+Update config file `./serial_motor_demo/config/driver.yaml`, then
+```bash
+ros2 launch serial_motor_demo driver_with_gui.launch.py
+```
 
 
 ## Update
