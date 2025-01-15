@@ -1,0 +1,6 @@
+serial_arduino_driver:
+  ros__parameters:
+    encoder_cpr: 442
+    serial_port: /dev/ttyACM0
+    baud_rate: 57600
+    serial_debug: True

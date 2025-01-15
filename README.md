@@ -16,14 +16,13 @@ The GUI provides a simple interface for development and testing of such a system
 The driver has a few parameters:
 
 - `encoder_cpr` - Encoder counts per revolution
-- `loop_rate` - Execution rate of the *Arduino* code (see Arduino side documentation for details)
-- `serial_port` - Serial port to connect to (default `/dev/ttyUSB0`)
+- `serial_port` - Serial port to connect to (default `/dev/ttyACM0`)
 - `baud_rate` - Serial baud rate (default `57600`)
 - `serial_debug` - Enables debugging of serial commands (default `false`)
 
 To run, e.g.
-```
-ros2 run serial_motor_demo driver --ros-args -p encoder_cpr:=3440 -p loop_rate:=30 -p serial_port:=/dev/ttyUSB0 -p baud_rate:=57600
+```bash
+ros2 run serial_motor_demo driver --ros-args -p encoder_cpr:=442 -p serial_port:=/dev/ttyACM0 -p baud_rate:=57600 -p serial_debug:=True
 ```
 
 It makes use of the following topics
@@ -35,15 +34,21 @@ It makes use of the following topics
 
 ## GUI Usage
 
-Has two modes, one for raw PWM input (-255 to 255) and one for closed-loop control. In this mode you must first set the limits for the sliders.
+Has two modes, one for raw PWM input (-255 to 255) and one for closed-loop control (rpm). In this mode you must first set the limits for the sliders.
+
+## Launch file usage
+
+Update `./serial_motor_demo/launch/driver_with_gui.launch.py`
 
 
-## TODO
+## Update
 
-- Add service for encoder reset
-- Add service for updating PID parameters
-- Stability improvements
-- More parameterisation
+wty-yy changes:
+1. Captiable commands with my [arduino_pid_controlled_motor](https://github.com/wty-yy/arduino_pid_controlled_motor/)
+    - `p <pwm1> <pwm2>`: pwm control
+    - `s <rpm1> <rpm2>`: rpm control
+2. Add a three seconds sleep before driver controlling (for stability)
+3. Change colsed-loop control from `encode_revolution/(s*loop_rate)` to `rpm (wheel revolution per minute)`
 
 
 

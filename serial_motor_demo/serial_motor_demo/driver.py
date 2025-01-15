@@ -22,13 +22,7 @@ class MotorDriver(Node):
         if (self.get_parameter('encoder_cpr').value == 0):
             print("WARNING! ENCODER CPR SET TO 0!!")
 
-
-        self.declare_parameter('loop_rate', value=0)
-        if (self.get_parameter('loop_rate').value == 0):
-            print("WARNING! LOOP RATE SET TO 0!!")
-
-
-        self.declare_parameter('serial_port', value="/dev/ttyUSB0")
+        self.declare_parameter('serial_port', value="/dev/ttyACM0")
         self.serial_port = self.get_parameter('serial_port').value
 
 
@@ -71,19 +65,18 @@ class MotorDriver(Node):
 
         print(f"Connecting to port {self.serial_port} at {self.baud_rate}.")
         self.conn = serial.Serial(self.serial_port, self.baud_rate, timeout=1.0)
-        print(f"Connected to {self.conn}")
-        
-
-        
-
+        for i in range(3):
+            print(f"{3-i} seconds...")
+            time.sleep(1)
+        print(f"Finish, connected to {self.conn}")
 
     # Raw serial commands
     
     def send_pwm_motor_command(self, mot_1_pwm, mot_2_pwm):
-        self.send_command(f"o {int(mot_1_pwm)} {int(mot_2_pwm)}")
+        self.send_command(f"p {int(mot_1_pwm)} {int(mot_2_pwm)}")
 
     def send_feedback_motor_command(self, mot_1_ct_per_loop, mot_2_ct_per_loop):
-        self.send_command(f"m {int(mot_1_ct_per_loop)} {int(mot_2_ct_per_loop)}")
+        self.send_command(f"s {int(mot_1_ct_per_loop)} {int(mot_2_ct_per_loop)}")
 
     def send_encoder_read_command(self):
         resp = self.send_command(f"e")
@@ -94,15 +87,11 @@ class MotorDriver(Node):
 
     # More user-friendly functions
 
-    def motor_command_callback(self, motor_command):
+    def motor_command_callback(self, motor_command: MotorCommand):
         if (motor_command.is_pwm):
-            self.send_pwm_motor_command(motor_command.mot_1_req_rad_sec, motor_command.mot_2_req_rad_sec)
+            self.send_pwm_motor_command(motor_command.a, motor_command.b)
         else:
-            # counts per loop = req rads/sec X revs/rad X counts/rev X secs/loop 
-            scaler = (1 / (2*math.pi)) * self.get_parameter('encoder_cpr').value * (1 / self.get_parameter('loop_rate').value)
-            mot1_ct_per_loop = motor_command.mot_1_req_rad_sec * scaler
-            mot2_ct_per_loop = motor_command.mot_2_req_rad_sec * scaler
-            self.send_feedback_motor_command(mot1_ct_per_loop, mot2_ct_per_loop)
+            self.send_feedback_motor_command(motor_command.a, motor_command.b)
 
     def check_encoders(self):
         resp = self.send_encoder_read_command()

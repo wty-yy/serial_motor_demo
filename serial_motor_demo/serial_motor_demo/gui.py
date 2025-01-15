@@ -109,20 +109,15 @@ class MotorGui(Node):
     def send_motor_once(self):
         msg = MotorCommand()
         msg.is_pwm = self.pwm_mode
-        if (self.pwm_mode):
-            msg.mot_1_req_rad_sec = float(self.m1.get())
-            msg.mot_2_req_rad_sec = float(self.m2.get())
-        else:
-            msg.mot_1_req_rad_sec = float(self.m1.get()*2*math.pi)
-            msg.mot_2_req_rad_sec = float(self.m2.get()*2*math.pi)
+        msg.a = float(self.m1.get())
+        msg.b = float(self.m2.get())
 
         self.publisher.publish(msg)
 
     def stop_motors(self):
         msg = MotorCommand()
         msg.is_pwm = self.pwm_mode
-        msg.mot_1_req_rad_sec = 0.0
-        msg.mot_2_req_rad_sec = 0.0
+        msg.a = msg.b = 0.0
         self.publisher.publish(msg)
 
     def set_mode(self, new_mode):
@@ -142,13 +137,13 @@ class MotorGui(Node):
 
         self.update_scale_limits()
 
-    def motor_vel_callback(self, motor_vels):
+    def motor_vel_callback(self, motor_vels: MotorVels):
         mot_1_spd_rev_sec = motor_vels.mot_1_rad_sec / (2*math.pi)
         mot_2_spd_rev_sec = motor_vels.mot_2_rad_sec / (2*math.pi)
         self.mot_1_spd_lbl.config(text=f"{mot_1_spd_rev_sec:.2f}")
         self.mot_2_spd_lbl.config(text=f"{mot_2_spd_rev_sec:.2f}")
 
-    def encoder_val_callback(self, encoder_vals):
+    def encoder_val_callback(self, encoder_vals: EncoderVals):
         self.mot_1_enc_lbl.config(text=f"{encoder_vals.mot_1_enc_val}")
         self.mot_2_enc_lbl.config(text=f"{encoder_vals.mot_2_enc_val}")
 
