@@ -69,7 +69,18 @@ class MotorGui(Node):
         self.m2 = Scale(m2_frame, from_=-255, to=255, resolution=1, orient=HORIZONTAL)
         self.m2.pack(side=LEFT, fill=X, expand=True)
 
-        self.m2.config(to=10)
+        m3_frame = Frame(root)
+        m3_frame.pack(fill=X)
+        Label(m3_frame, text="Motor 3").pack(side=LEFT)
+        self.m3 = Scale(m3_frame, from_=-255, to=255, resolution=1, orient=HORIZONTAL)
+        self.m3.pack(side=LEFT, fill=X, expand=True)
+
+        m4_frame = Frame(root)
+        m4_frame.pack(fill=X)
+        Label(m4_frame, text="Motor 4").pack(side=LEFT)
+        self.m4 = Scale(m4_frame, from_=-255, to=255, resolution=1, orient=HORIZONTAL)
+        self.m4.pack(side=LEFT, fill=X, expand=True)
+        # self.m2.config(to=10)
 
         motor_btns_frame = Frame(root)
         motor_btns_frame.pack()
@@ -88,6 +99,10 @@ class MotorGui(Node):
         self.mot_1_enc_lbl.pack(side=LEFT)
         self.mot_2_enc_lbl = Label(enc_frame, text="XXX")
         self.mot_2_enc_lbl.pack(side=LEFT)
+        self.mot_3_enc_lbl = Label(enc_frame, text="XXX")
+        self.mot_3_enc_lbl.pack(side=LEFT)
+        self.mot_4_enc_lbl = Label(enc_frame, text="XXX")
+        self.mot_4_enc_lbl.pack(side=LEFT)
 
         speed_frame = Frame(root)
         speed_frame.pack(fill=X)
@@ -98,19 +113,25 @@ class MotorGui(Node):
         self.mot_1_spd_lbl.pack(side=LEFT)
         self.mot_2_spd_lbl = Label(enc_frame, text="XXX")
         self.mot_2_spd_lbl.pack(side=LEFT)
+        self.mot_3_spd_lbl = Label(enc_frame, text="XXX")
+        self.mot_3_spd_lbl.pack(side=LEFT)
+        self.mot_4_spd_lbl = Label(enc_frame, text="XXX")
+        self.mot_4_spd_lbl.pack(side=LEFT)
 
 
         self.set_mode(True)
 
 
     def show_values(self):
-        print (self.m1.get(), self.m2.get())
+        print (self.m1.get(), self.m2.get(), self.m3.get(), self.m4.get())
 
     def send_motor_once(self):
         msg = MotorCommand()
         msg.is_pwm = self.pwm_mode
         msg.a = float(self.m1.get())
         msg.b = float(self.m2.get())
+        msg.c = float(self.m3.get())
+        msg.d = float(self.m4.get())
 
         self.publisher.publish(msg)
 
@@ -140,12 +161,18 @@ class MotorGui(Node):
     def motor_vel_callback(self, motor_vels: MotorVels):
         mot_1_spd_rev_sec = motor_vels.mot_1_rad_sec / (2*math.pi)
         mot_2_spd_rev_sec = motor_vels.mot_2_rad_sec / (2*math.pi)
+        mot_3_spd_rev_sec = motor_vels.mot_3_rad_sec / (2*math.pi)
+        mot_4_spd_rev_sec = motor_vels.mot_4_rad_sec / (2*math.pi)
         self.mot_1_spd_lbl.config(text=f"{mot_1_spd_rev_sec:.2f}")
         self.mot_2_spd_lbl.config(text=f"{mot_2_spd_rev_sec:.2f}")
+        self.mot_3_spd_lbl.config(text=f"{mot_3_spd_rev_sec:.2f}")
+        self.mot_4_spd_lbl.config(text=f"{mot_4_spd_rev_sec:.2f}")
 
     def encoder_val_callback(self, encoder_vals: EncoderVals):
         self.mot_1_enc_lbl.config(text=f"{encoder_vals.mot_1_enc_val}")
         self.mot_2_enc_lbl.config(text=f"{encoder_vals.mot_2_enc_val}")
+        self.mot_3_enc_lbl.config(text=f"{encoder_vals.mot_3_enc_val}")
+        self.mot_4_enc_lbl.config(text=f"{encoder_vals.mot_4_enc_val}")
 
 
 
@@ -156,10 +183,15 @@ class MotorGui(Node):
         if (self.pwm_mode):
             self.m1.config(from_=-255, to=255, resolution=1)
             self.m2.config(from_=-255, to=255, resolution=1)
+            self.m3.config(from_=-255, to=255, resolution=1)
+            self.m4.config(from_=-255, to=255, resolution=1)
         else:
-            lim = float(self.slider_max_val_box.get())
+            max_val = self.slider_max_val_box.get()
+            lim = float(max_val) if len(max_val) else 240
             self.m1.config(from_=-lim, to=lim, resolution=0.1)
             self.m2.config(from_=-lim, to=lim, resolution=0.1)
+            self.m3.config(from_=-lim, to=lim, resolution=0.1)
+            self.m4.config(from_=-lim, to=lim, resolution=0.1)
 
 
 

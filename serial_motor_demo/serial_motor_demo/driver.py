@@ -55,8 +55,12 @@ class MotorDriver(Node):
         self.last_enc_read_time = time.time()
         self.last_m1_enc = 0
         self.last_m2_enc = 0
+        self.last_m3_enc = 0
+        self.last_m4_enc = 0
         self.m1_spd = 0.0
         self.m2_spd = 0.0
+        self.m3_spd = 0.0
+        self.m4_spd = 0.0
 
         self.mutex = Lock()
 
@@ -72,11 +76,11 @@ class MotorDriver(Node):
 
     # Raw serial commands
     
-    def send_pwm_motor_command(self, mot_1_pwm, mot_2_pwm):
-        self.send_command(f"p {int(mot_1_pwm)} {int(mot_2_pwm)}")
+    def send_pwm_motor_command(self, mot_1_pwm, mot_2_pwm, mot_3_pwm, mot_4_pwm):
+        self.send_command(f"p {int(mot_1_pwm)} {int(mot_2_pwm)} {int(mot_3_pwm)} {int(mot_4_pwm)}")
 
-    def send_feedback_motor_command(self, mot_1_ct_per_loop, mot_2_ct_per_loop):
-        self.send_command(f"s {int(mot_1_ct_per_loop)} {int(mot_2_ct_per_loop)}")
+    def send_feedback_motor_command(self, mot_1_ct_per_loop, mot_2_ct_per_loop, mot_3_ct_per_loop, mot_4_ct_per_loop):
+        self.send_command(f"s {int(mot_1_ct_per_loop)} {int(mot_2_ct_per_loop)} {int(mot_3_ct_per_loop)} {int(mot_4_ct_per_loop)}")
 
     def send_encoder_read_command(self):
         resp = self.send_command(f"e")
@@ -88,10 +92,11 @@ class MotorDriver(Node):
     # More user-friendly functions
 
     def motor_command_callback(self, motor_command: MotorCommand):
+        msg = (motor_command.a, motor_command.b, motor_command.c, motor_command.d)
         if (motor_command.is_pwm):
-            self.send_pwm_motor_command(motor_command.a, motor_command.b)
+            self.send_pwm_motor_command(*msg)
         else:
-            self.send_feedback_motor_command(motor_command.a, motor_command.b)
+            self.send_feedback_motor_command(*msg)
 
     def check_encoders(self):
         resp = self.send_encoder_read_command()
@@ -105,19 +110,29 @@ class MotorDriver(Node):
             self.last_m1_enc = resp[0]
             m2_diff = resp[1] - self.last_m2_enc
             self.last_m2_enc = resp[1]
+            m3_diff = resp[2] - self.last_m3_enc
+            self.last_m3_enc = resp[2]
+            m4_diff = resp[3] - self.last_m4_enc
+            self.last_m4_enc = resp[3]
 
             rads_per_ct = 2*math.pi/self.get_parameter('encoder_cpr').value
             self.m1_spd = m1_diff*rads_per_ct/time_diff
             self.m2_spd = m2_diff*rads_per_ct/time_diff
+            self.m3_spd = m3_diff*rads_per_ct/time_diff
+            self.m4_spd = m4_diff*rads_per_ct/time_diff
 
             spd_msg = MotorVels()
             spd_msg.mot_1_rad_sec = self.m1_spd
             spd_msg.mot_2_rad_sec = self.m2_spd
+            spd_msg.mot_3_rad_sec = self.m3_spd
+            spd_msg.mot_4_rad_sec = self.m4_spd
             self.speed_pub.publish(spd_msg)
 
             enc_msg = EncoderVals()
             enc_msg.mot_1_enc_val = self.last_m1_enc
             enc_msg.mot_2_enc_val = self.last_m2_enc
+            enc_msg.mot_3_enc_val = self.last_m3_enc
+            enc_msg.mot_4_enc_val = self.last_m4_enc
             self.encoder_pub.publish(enc_msg)
 
 
